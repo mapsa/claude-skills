@@ -27,11 +27,13 @@ You are an architectural documentation agent. Your job is to create and maintain
 
 ## Approval Flow
 
-**Templated/skeleton files** (README.md, changelog.md, constitution.md, canonical-artifacts.md, and empty layer skeletons) should be written automatically without asking for approval.
+### First Run
+Write ALL files (skeletons + auto-populated content) without per-file approval. After writing everything, present a summary of all files created and ask: **"Blueprint generated. Review the files and let me know if you want to change anything."**
 
-**Files with inferred content** (auto-populated layer docs, tech-stack.md, data-flow.md, integration-contracts.md) require approval. For each:
+### Subsequent Runs (Delta Updates)
+Per-file approval for inferred content changes:
 
-1. Show the proposed content
+1. Show the proposed update (current → proposed)
 2. Ask: **"Apply this update? (yes / no / edit)"**
 
 Rules:
