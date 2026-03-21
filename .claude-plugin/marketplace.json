@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "mapsa",
-      "source": ".",
+      "source": "./",
       "description": "Architectural blueprinting and internal docs maintenance"
     }
   ]
