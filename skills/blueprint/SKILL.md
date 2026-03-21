@@ -161,7 +161,7 @@ Run this flow when `.claude/docs/README.md` does not exist.
 
 Use these tools in order:
 
-1. **Bash:** `ls -1` in the project root to list top-level directories and files
+1. **Glob:** Use `*` in the project root to list top-level directories and files
 2. **Glob:** Search for build files to identify the tech stack:
    - `**/pyproject.toml`
    - `**/package.json`
@@ -219,13 +219,7 @@ Write their answers into `constitution.md` using the constitution template.
 
 ### Step 7: Gitignore check
 
-Use Bash to check if `.claude/docs/` is in `.gitignore`:
-
-~~~bash
-grep -qxF '.claude/docs/' .gitignore 2>/dev/null || echo '.claude/docs/' >> .gitignore
-~~~
-
-If `.gitignore` does not exist, create it with `.claude/docs/` as the first entry.
+Use **Grep** to check if `.claude/docs/` is already in `.gitignore`. If not found, use **Edit** to append `.claude/docs/` to `.gitignore`. If `.gitignore` does not exist, use **Write** to create it with `.claude/docs/` as the first entry.
 
 ### Step 8: Changelog entry
 
@@ -248,11 +242,7 @@ Run this flow when `.claude/docs/README.md` already exists.
 
 ### Step 0: Gitignore check
 
-Ensure `.claude/docs/` is in `.gitignore` (may have been removed since first run):
-
-~~~bash
-grep -qxF '.claude/docs/' .gitignore 2>/dev/null || echo '.claude/docs/' >> .gitignore
-~~~
+Use **Grep** to check if `.claude/docs/` is in `.gitignore`. If not found, use **Edit** to append it. If `.gitignore` does not exist, use **Write** to create it with `.claude/docs/` as the first entry.
 
 ### Step 1: Detect changes
 
