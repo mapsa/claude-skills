@@ -1,6 +1,6 @@
 ---
 name: blueprint
-description: Use when you want to create or update internal architectural documentation for a codebase — generates a living blueprint in .claude/docs/ comprehensive enough to rebuild the project from scratch
+description: Use when creating or updating internal architectural documentation, onboarding docs, or a rebuild-ready spec for a codebase, or when asked to document a project's architecture
 ---
 
 # Blueprint
@@ -67,9 +67,11 @@ Create the following directory structure in `.claude/docs/`:
 ~~~markdown
 # Blueprint — <Project Name>
 
-**schema_version:** 1
+**schema_version:** 2
 **docs_path:** .claude/docs/
 **generated:** <YYYY-MM-DD>
+**last_run_commit:** <full HEAD hash at the end of this run, or "none" outside git>
+**docs_tracking:** <committed | ignored>
 
 ## Path Mapping
 
@@ -77,6 +79,15 @@ Create the following directory structure in `.claude/docs/`:
 |-------------|-------------|
 | <path> | <layer>.md |
 ~~~
+
+**Schema versions:**
+
+| Version | Changes |
+|---------|---------|
+| 1 | Initial format |
+| 2 | Adds `last_run_commit` (delta baseline) and `docs_tracking` (git tracking choice) |
+
+Migrating v1 docs to v2: ask the tracking question from First Run Step 7, set `last_run_commit` to the current HEAD, bump `schema_version` to 2. Preserve all existing content.
 
 ### Per-Layer Doc (`<layer-name>.md`)
 
@@ -141,9 +152,100 @@ These docs capture intent; implementations may differ:
 |-----|-----------|
 ~~~
 
+### architecture.md
+
+~~~markdown
+# Architecture
+
+## Overview
+One-paragraph system summary: what it is and its runtime shape (CLI, service, pipeline, library).
+
+## Layer Map
+| Layer | Responsibility | Depends on |
+|-------|----------------|------------|
+
+## Key Decisions
+Structural decisions and their trade-offs. [NEEDS CLARIFICATION] where rationale is not evident.
+~~~
+
+### tech-stack.md
+
+~~~markdown
+# Tech Stack
+
+## Languages & Runtimes
+| Language | Version | Used for |
+|----------|---------|----------|
+
+## Dependencies
+| Dependency | Version | Purpose | Replaceable in a rebuild? |
+|------------|---------|---------|---------------------------|
+
+## Tooling
+Build, test, lint and CI commands.
+~~~
+
+### data-flow.md
+
+~~~markdown
+# Data Flow
+
+## Sources & Sinks
+Where data enters and leaves the system.
+
+## Transformations
+| Stage | Input | Output | Invariants |
+|-------|-------|--------|------------|
+
+## State & Storage
+What is persisted, where, and in what format.
+~~~
+
+### build-order.md
+
+~~~markdown
+# Build Order
+
+## Rebuild Sequence
+Numbered order in which layers must be built so each step is independently testable.
+
+1. <layer>: <why first>
+
+## Environment
+Tools and versions required to build from a clean checkout.
+~~~
+
+### integration-contracts.md
+
+~~~markdown
+# Integration Contracts
+
+## External Interfaces
+APIs, CLIs, file formats or events exposed outside the system.
+
+| Interface | Shape | Consumers | Stability |
+|-----------|-------|-----------|-----------|
+
+## Internal Boundaries
+Contracts between layers that must survive a rebuild.
+~~~
+
+### test-fixtures.md
+
+~~~markdown
+# Test Fixtures
+
+## Fixture Inventory
+| Fixture | Path | What it exercises |
+|---------|------|-------------------|
+
+## Regeneration
+How fixtures are produced; which are hand-crafted vs generated.
+~~~
+
 ### changelog.md
 
-Each entry follows this format:
+Starts with a `# Changelog` heading. Entries are newest-first. Each entry follows this format:
 
 ~~~markdown
 ## YYYY-MM-DD — Summary of change
@@ -193,11 +295,11 @@ Wait for user confirmation before proceeding.
 
 ### Step 3: Store path mapping
 
-Write `README.md` using the README.md template. Fill in the path mapping table with confirmed layers.
+Write `README.md` using the README.md template. Fill in the path mapping table with confirmed layers. Set `docs_tracking` and `last_run_commit` to `pending`: Steps 7 and 9 fill them in.
 
 ### Step 4: Generate skeleton
 
-Use the Write tool to create each template file with `[NEEDS CLARIFICATION]` markers in place. Create one file at a time, following the **Approval Flow** for each.
+Use the Write tool to create every template file with `[NEEDS CLARIFICATION]` markers in place. Write all files in one batch: first runs never prompt per file (see **Approval Flow**).
 
 ### Step 5: Auto-populate
 
@@ -206,7 +308,7 @@ For each layer, use Read to examine key source files:
 - Public interfaces and exports
 - Type definitions, data models
 
-Fill in inferrable content: tech stack from the build file, public interfaces from module exports, file listings for canonical artifacts. Use `[NEEDS CLARIFICATION]` for anything that requires human knowledge of intent or rationale.
+Fill in inferrable content: tech stack from the build file, public interfaces from module exports, file listings for canonical artifacts. Populate the cross-cutting docs (`architecture.md`, `tech-stack.md`, `data-flow.md`, `build-order.md`, `integration-contracts.md`, `test-fixtures.md`, `canonical-artifacts.md`) from the same reading. Use `[NEEDS CLARIFICATION]` for anything that requires human knowledge of intent or rationale.
 
 ### Step 6: Constitution prompt
 
@@ -218,9 +320,13 @@ Ask the user:
 
 Write their answers into `constitution.md` using the constitution template.
 
-### Step 7: Gitignore check
+### Step 7: Tracking choice
 
-Use **Grep** to check if `.claude/docs/` is already in `.gitignore`. If not found, use **Edit** to append `.claude/docs/` to `.gitignore`. If `.gitignore` does not exist, use **Write** to create it with `.claude/docs/` as the first entry.
+Ask the user once:
+
+> "Should the blueprint be committed to git (recommended: the whole team shares one living blueprint and it evolves with the code) or kept local by adding `.claude/docs/` to `.gitignore`?"
+
+Record the answer in `README.md` as `docs_tracking: committed` or `docs_tracking: ignored`. Only if the user chooses **ignored**: use Grep to check `.gitignore`, then Edit to append `.claude/docs/` (or Write to create `.gitignore` if missing). Never touch `.gitignore` on later runs unless the user changes this choice.
 
 ### Step 8: Changelog entry
 
@@ -237,29 +343,30 @@ Write the first changelog entry:
 - Marked gaps with [NEEDS CLARIFICATION]
 ~~~
 
+### Step 9: Set the baseline
+
+Set `last_run_commit` in `README.md` to the current HEAD (`git rev-parse HEAD`), or `none` in Snapshot mode. The next run diffs from this commit.
+
 ## Subsequent Run Flow
 
 Run this flow when `.claude/docs/README.md` already exists.
 
-### Step 0: Gitignore check
+### Step 0: Check schema and tracking choice
 
-Use **Grep** to check if `.claude/docs/` is in `.gitignore`. If not found, use **Edit** to append it. If `.gitignore` does not exist, use **Write** to create it with `.claude/docs/` as the first entry.
+Read `schema_version` and `docs_tracking` from `.claude/docs/README.md`. If `schema_version` is 1, run the v1→v2 migration (see Schema versions) before continuing. Respect the recorded `docs_tracking` choice; do not touch `.gitignore`.
 
 ### Step 1: Detect changes
 
-Use Bash to read git diff:
+Read `last_run_commit` from `.claude/docs/README.md`, then use Bash to build the change set:
 
 ~~~bash
-git diff --name-only HEAD
+git diff --name-only <last_run_commit>..HEAD   # committed since the last blueprint run
+git status --porcelain                          # uncommitted and untracked files
 ~~~
 
-If this returns no results (no uncommitted changes), fall back to the last commit:
+The change set is the union of both lists, excluding paths under `.claude/docs/` (the blueprint itself is never a source change). If `last_run_commit` is missing or not known to git (rebase, shallow clone), warn the user and fall back to `git diff --name-only HEAD~1..HEAD` plus `git status --porcelain`.
 
-~~~bash
-git diff --name-only HEAD~1..HEAD
-~~~
-
-If both return empty (Snapshot mode, or no changes at all), inform the user: "No changes detected. Run again after making changes, or I can do a full review of existing docs."
+If the change set is empty (or Snapshot mode), inform the user: "No changes detected since the last blueprint run. Run again after making changes, or I can do a full review of existing docs."
 
 ### Step 2: Map changed files to docs
 
@@ -274,6 +381,11 @@ Read the path mapping table from `.claude/docs/README.md`. For each changed file
 | Data transformation logic (pipelines, ETL, serialization) | `data-flow.md` |
 | Build file (`pyproject.toml`, `package.json`, etc.) | `tech-stack.md` |
 | Any structural change (new dirs, moved files) | `architecture.md`, `build-order.md` |
+
+"Check" means read the doc and propose an update only if it is actually affected. Each doc gets at most one proposal per run, covering all of its triggering files.
+
+3. A changed file that matches **no mapping entry** is new territory: propose a new `<layer>.md` (or an addition to an existing layer doc) plus a new row in the path mapping table, as a single approval.
+4. A **deleted** file or directory: propose removing or rewriting the doc sections that describe it. If an entire layer is gone, propose retiring its doc and its mapping row.
 
 ### Step 3: Per-doc approval
 
@@ -291,7 +403,11 @@ While reviewing docs, check for `[NEEDS CLARIFICATION]` markers. If the relevant
 
 ### Step 5: Update changelog
 
-Append an entry to `changelog.md` with today's date, the trigger (commit hash or "uncommitted changes"), and a summary of all docs updated or declined.
+Add an entry at the top of `changelog.md` (newest first) with today's date, the trigger (the commit range, "uncommitted changes", or both), and a summary of all docs updated or declined.
+
+### Step 6: Advance the baseline
+
+Update `last_run_commit` in `.claude/docs/README.md` to the current HEAD so the next run diffs from here. Files documented this run while still uncommitted will reappear in the next run's `git status` output; the do-not-re-suggest rule applies, so skip them unless their content has changed again.
 
 ## Error Handling
 
@@ -302,6 +418,6 @@ Append an entry to `changelog.md` with today's date, the trigger (commit hash or
 | **`schema_version` outdated** | Offer to migrate: show what changed between versions, apply updates while preserving user-written content |
 | **Doc files corrupted/malformed** | Offer to regenerate specific files from template while preserving other intact docs |
 | **User declines all suggestions** | Log "no changes applied" in changelog. Do not re-suggest the same changes unless source changes again |
-| **Monorepo with multiple packages** | Discover each package as a separate layer group. Ask user how to organize (one blueprint vs per-package) |
+| **Monorepo with multiple packages** | Default to one blueprint with a layer group per package; confirm with the user, who may choose per-package blueprints instead |
 | **Source too large for context** | Read only changed files + their immediate imports. Use `[NEEDS CLARIFICATION]` for parts not examined |
 | **`[NEEDS CLARIFICATION]` unresolved** | Persist markers across runs. Attempt to resolve when relevant source changes. Otherwise leave as-is |

@@ -1,7 +1,7 @@
 {
   "name": "claude-skills",
   "description": "Reusable Claude Code skills for architectural blueprinting, docs maintenance, and spec-driven development.",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "author": {
     "name": "mapsa"
   },

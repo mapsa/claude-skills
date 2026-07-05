@@ -29,7 +29,9 @@ A `docs/` directory inside `.claude/` with:
 
 On **first run**, blueprint discovers your project structure, identifies logical layers, and generates the full doc set. Content it can infer from source code is auto-populated; gaps are marked with `[NEEDS CLARIFICATION]`.
 
-On **subsequent runs**, it detects changes via `git diff`, maps them to affected docs, and proposes targeted updates for your approval.
+On **subsequent runs**, it diffs everything since the last blueprint run (the baseline commit is recorded in the docs' README), including uncommitted and untracked files, maps changes to affected docs, and proposes targeted updates for your approval. New unmapped files become new layer docs; deletions retire stale sections.
+
+You choose on first run whether the blueprint is committed to git (recommended, so the team shares it) or kept local via `.gitignore`.
 
 ## Full Specification
 
