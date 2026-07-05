@@ -8,14 +8,14 @@ From the terminal:
 
 ```
 claude plugin marketplace add mapsa/claude-skills
-claude plugin install mapsa@mapsa
+claude plugin install claude-skills@mapsa
 ```
 
 Or from within a Claude Code session:
 
 ```
 /plugin marketplace add mapsa/claude-skills
-/plugin install mapsa@mapsa
+/plugin install claude-skills@mapsa
 ```
 
 Restart Claude Code after installing so the skills load.

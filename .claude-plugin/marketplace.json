@@ -8,7 +8,7 @@
   },
   "plugins": [
     {
-      "name": "mapsa",
+      "name": "claude-skills",
       "source": "./",
       "description": "Architectural blueprinting and internal docs maintenance"
     }
