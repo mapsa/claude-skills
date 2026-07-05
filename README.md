@@ -4,9 +4,21 @@ A Claude Code plugin with reusable skills for architectural documentation and sp
 
 ## Install
 
+From the terminal:
+
 ```
-claude plugin add mapsa/claude-skills
+claude plugin marketplace add mapsa/claude-skills
+claude plugin install mapsa@mapsa
 ```
+
+Or from within a Claude Code session:
+
+```
+/plugin marketplace add mapsa/claude-skills
+/plugin install mapsa@mapsa
+```
+
+Restart Claude Code after installing so the skills load.
 
 ## Skills
 
